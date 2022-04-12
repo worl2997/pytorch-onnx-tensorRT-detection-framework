@@ -120,6 +120,7 @@ def main(engine_path, img_path, img_size):
 
         names_file = 'data/coco.names'
         class_names = load_class_names(names_file)
+        print(class_names)
         plot_boxes_cv2(img , boxes[0], savename='predictions_trt.jpg', class_names=class_names)
 
 
