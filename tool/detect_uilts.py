@@ -132,7 +132,7 @@ def grab_img(cam):
     cam.thread_running = False
 
 
-class Camera():
+class Detect():
     """
     각 device 및 이미지/비디오 파일로 부터 이미지를 읽어들이는 클래스
     """
@@ -152,7 +152,7 @@ class Camera():
         self._open()  # try to open the camera
 
     def _open(self):
-        if self .cpa is not None:
+        if self.cap is not None:
             raise RuntimeError('camera is already opened!')
         a = self.args
 
@@ -162,6 +162,8 @@ class Camera():
             self.cap = 'image'
             self.img_file = cv2.imread(a.image)
             if self.img_handle is not None:
+                # 만약 영상 프레임을 arg로 지정한 사이즈로 resize 하게 된다면 (arg 기본 사이즈 [640,480])
+
                 if self.do_resize:  # 이미지 resize
                     self.img_file = cv2.resize(self.img_file,  (a.width, a.height))
                 self.is_opened = True
@@ -219,7 +221,7 @@ class Camera():
             # 만약 video file 소스가 따로 없고, 캠을 사용할 경우, child thread를 시작
             assert not self.thread_running
             self.thread_running = True
-            self.thread = threading.Thread(target=graph_img, args=(self,))
+            self.thread = threading.Thread(target=grab_img, args=(self,))
             self.thread.start()
 
     def _stop(self):
@@ -236,10 +238,27 @@ class Camera():
             if img is None:
                 logging.infor('Camera: reach to end of the video')
                 if self.video_looping:
-
-
+                    self.cap.release() # open 한 cap 객체를 해제
+                    self.cap = cv2.VideoCapture(self.video_file)
+                _, img = self.cap.read()
+            if img is not None and self.do_resize:
+                img = cv2.resize(img, (self.img_width, self.img_height))
+            return img
         elif self.cap == 'image':
             pass
         else:
             if self.copy_frame:
-                r
+                return self.img_handle.copy()
+            else:
+                return self.img_handle
+
+    def release(self):
+        self._stop()
+        try:
+            self.cap.release()
+        except:
+            pass
+        self.is_opened = False
+
+    def __del__(self):
+        self.release()
