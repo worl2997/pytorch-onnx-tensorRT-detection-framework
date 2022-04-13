@@ -197,4 +197,49 @@ class Camera():
         return self.is_opened
 
     def _start(self):
-        if not self.cap
+        # cap 인스턴스가 닫혀있을떄
+        if not self.cap.isOpened():
+            logging.warning('start while cap is not opened!')
+            return
+
+        # Try to grab the 1st image and determine width and height
+        _, self.img_handle = self.cap.read()
+        if self.img_handle is None:
+            logging.warning('Camera: cap.read() returns no image ')
+            self.is_opened = False
+            return
+
+        self.is_opened = True
+        # 비디오 파일을 사용할 경우
+        if self.video_file:
+            if not self.do_resize:
+                self.img_height, self.img_width, _ = self.img_handle.shape
+        else:
+            self.img_height, self.img_width, _ = self.img_handle.shape
+            # 만약 video file 소스가 따로 없고, 캠을 사용할 경우, child thread를 시작
+            assert not self.thread_running
+            self.thread_running = True
+            self.thread = threading.Thread(target=graph_img, args=(self,))
+            self.thread.start()
+
+    def _stop(self):
+        if self.thread_running:
+            self.thread_running = False
+            # self.thread. join
+
+    def read(self):
+        # camera object로 부터 프레임을 읽어들임
+        if not self.is_opened:
+            return None
+        if self.video_file:
+            _, img = self.cap.read()
+            if img is None:
+                logging.infor('Camera: reach to end of the video')
+                if self.video_looping:
+
+
+        elif self.cap == 'image':
+            pass
+        else:
+            if self.copy_frame:
+                r
