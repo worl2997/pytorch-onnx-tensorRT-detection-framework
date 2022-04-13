@@ -21,8 +21,9 @@ def parse_args():
     parser = add_camera_args(parser)
 
     parser.add_argument(
-        '-c', '--name_file', type=str, default='coco.names',
+        '-c', '--name_file', type=str, default='data/coco.names',
         help='path of class name file')
+
     parser.add_argument(
         '-t', '--conf_thresh', type=float, default=0.4,
         help='set the detection confidence threshold')
@@ -72,10 +73,8 @@ def loop_and_detect(cam, trt_yolo, conf_th, nms_th, class_list):
 
 def main():
     args = parse_args()
-    if args.category_num <= 0:
-        raise SystemExit('ERROR: bad category_num (%d)!' % args.category_num)
-    if not os.path.isfile('yolo/%s.trt' % args.model):
-        raise SystemExit('ERROR: file (yolo/%s.trt) not found!' % args.model)
+    if not os.path.isfile('%s' % args.model):
+        raise SystemExit('ERROR: file (yolo/%s.engine) not found!' % args.model)
 
     cam = Detect(args) # video 및 카메라 인스턴스 모듈-> 출력 영상의 사이즈는 조절 가능
     if not cam.isOpened():
@@ -89,8 +88,8 @@ def main():
         WINDOW_NAME, 'TensorRT object detecion',
         cam.img_width, cam.img_height)
     # yolo 플러그인으로 detection이 구현되어있음
-    trt_yolo = Trt_yolo(args.model, args.category_num, img_size) # 이부분을 좀 잘봐야할듯
-    loop_and_detect(cam, trt_yolo, args.conf_thresh, args.nms_tresh, cls_list)
+    trt_yolo = Trt_yolo(args.model, len(cls_list), img_size) # 이부분을 좀 잘봐야할듯
+    loop_and_detect(cam, trt_yolo, args.conf_thresh, args.nms_thresh, cls_list)
 
     cam.release()
     cv2.destroyAllWindows()

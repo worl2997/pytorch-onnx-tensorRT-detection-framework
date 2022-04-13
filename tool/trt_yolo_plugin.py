@@ -61,7 +61,7 @@ def do_inference(context, bindings, inputs, outputs, stream):
     # Transfer input data to the GPU.
     [cuda.memcpy_htod_async(inp.device, inp.host, stream) for inp in inputs]
     # Run inference.
-    context.execute_async(bindings=bindings, stream_handle=stream.handle)
+    context.execute_async(batch_size=1, bindings=bindings, stream_handle=stream.handle)
     # Transfer predictions back from the GPU.
     [cuda.memcpy_dtoh_async(out.host, out.device, stream) for out in outputs]
     # Synchronize the stream
@@ -86,7 +86,7 @@ class Trt_yolo(object):
         try:
             self.context = self.engine.create_execution_context()
             self.inputs, self.outputs, self.bindings, self.stream = allocate_buffers(self.engine, 1)
-            self.context.set_binding_shape(0, (1, 3, self.IMAGE_H, self.IN_IMAGE_W))
+            self.context.set_binding_shape(0, (1, 3, self.IN_IMAGE_W, self.IN_IMAGE_W))
         except Exception as e:
             raise RuntimeError('fail to allocate CUDA resources') from e
 
